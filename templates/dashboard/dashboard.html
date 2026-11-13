@@ -1,0 +1,72 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <title>Головна | Support Platform</title>
+</head>
+<body>
+
+    <div class="dashboard-container">
+
+        <div class="dashboard-header">
+            <h1>Support Platform</h1>
+            <h2>Вітаємо, {{ user.username }}!</h2>
+            <p>Твоя роль: <strong>{{ user.get_role_display }}</strong></p>
+        </div>
+
+        <nav class="dashboard-nav">
+            <a href="{% url 'profile' %}">Мій профіль</a>
+            <a href="{% url 'ticket_list' %}">Перейти до заявок</a>
+            {% if user.role == 'Client' %}
+                <a href="{% url 'ticket_create' %}">Створити заявку</a>
+            {% endif %}
+
+            <form method="POST" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit">Вийти</button>
+            </form>
+        </nav>
+
+        <div class="profile-container" style="margin-top: 25px;">
+            {% if user.role == 'Client' %}
+                <h2>Статистика ваших заявок</h2>
+                <p>Відкриті заявки: <strong>{{ open_count }}</strong> (ліміт: максимум 5)</p>
+                <p>У роботі: <strong>{{ in_progress_count }}</strong></p>
+                <p>Вирішені: <strong>{{ resolved_count }}</strong></p>
+                <p>Закриті / Відхилені: <strong>{{ closed_count }}</strong></p>
+
+            {% elif user.role == 'Agent' %}
+                <h2>Панель агента</h2>
+                <p>Ваших активних призначених заявок: <strong>{{ assigned_count }}</strong></p>
+                <p>Вирішено вами: <strong>{{ resolved_count }}</strong></p>
+                <p>Нових доступних заявок у системі: <strong>{{ new_available_count }}</strong></p>
+
+            {% elif user.role == 'Manager' %}
+                <h2>Зведена статистика платформи</h2>
+                <p>Всього заявок: <strong>{{ total_tickets }}</strong></p>
+
+                <h3 style="margin-top: 15px; font-size: 18px; color: #423879;">За статусами:</h3>
+                <ul>
+                    {% for label, count in status_stats.items %}
+                        <li>{{ label }}: <strong>{{ count }}</strong></li>
+                    {% endfor %}
+                </ul>
+
+                <h3 style="margin-top: 15px; font-size: 18px; color: #423879;">Навантаження на агентів:</h3>
+                <ul>
+                    {% for item in agent_stats %}
+                        <li>{{ item.agent.username }}: <strong>{{ item.count }}</strong> заявок(-и)</li>
+                    {% empty %}
+                        <li>У системі ще немає агентів.</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+
+    </div>
+
+</body>
+</html>

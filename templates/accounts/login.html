@@ -1,0 +1,30 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <title>Вхід | Support Platform</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body class="auth-page">
+
+    <h1>З поверненням!</h1>
+    <p>Увійди до свого акаунта</p>
+
+    <form method="POST">
+        {% csrf_token %}
+
+        {{ form.as_p }}
+
+        <button type="submit">Увійти</button>
+    </form>
+
+    <p>
+        Ще не маєш акаунта?
+        <a href="{% url 'register' %}">Зареєструватися</a>
+    </p>
+
+</body>
+</html>

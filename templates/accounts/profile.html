@@ -1,0 +1,38 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <title>Мій профіль | Support Platform</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+ <div class="profile-container">
+
+    <h1>Мій профіль</h1>
+
+    <p>Логін: {{ user.username }}</p>
+    <p>Email: {{ user.email }}</p>
+    <p>Роль: {{ user.get_role_display }}</p>
+
+    <h2>Редагування профілю</h2>
+
+    <form method="POST">
+        {% csrf_token %}
+
+        {{ form.as_p }}
+
+        <button type="submit">Зберегти зміни</button>
+    </form>
+
+    <p>
+        <a href="{% url 'dashboard' %}">Повернутися на головну</a>
+    </p>
+
+ </div>
+
+
+</body>
+</html>

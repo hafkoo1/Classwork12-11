@@ -1,0 +1,162 @@
+
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ ticket.title }}</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+
+<div class="profile-container">
+
+    <h1>{{ ticket.title }}</h1>
+
+    {% for message in messages %}
+        <p>{{ message }}</p>
+    {% endfor %}
+
+    <p>{{ ticket.description }}</p>
+    <p>Категорія: {{ ticket.category }}</p>
+    <p>Пріоритет: {{ ticket.get_priority_display }}</p>
+    <p>Статус: {{ ticket.get_status_display }}</p>
+    <p>Автор: {{ ticket.author.username }}</p>
+    <p>Виконавець: {{ ticket.assignee|default:"Не призначено" }}</p>
+
+    <h2>Дії із заявкою</h2>
+
+    {% if user.role == 'Agent' and ticket.status == 'New' %}
+        <form method="POST" action="{% url 'ticket_action' ticket.id 'take' %}">
+            {% csrf_token %}
+            <button type="submit">Взяти в роботу</button>
+        </form>
+    {% endif %}
+
+    {% if user.role == 'Agent' or user.role == 'Manager' %}
+
+        {% if ticket.status == 'In Progress' %}
+            <form method="POST" action="{% url 'ticket_action' ticket.id 'waiting' %}">
+                {% csrf_token %}
+                <button type="submit">Очікувати відповіді</button>
+            </form>
+
+            <form method="POST" action="{% url 'ticket_action' ticket.id 'resolve' %}">
+                {% csrf_token %}
+                <button type="submit">Позначити вирішеною</button>
+            </form>
+        {% endif %}
+
+        {% if ticket.status == 'Waiting' %}
+            <form method="POST" action="{% url 'ticket_action' ticket.id 'in_progress' %}">
+                {% csrf_token %}
+                <button type="submit">Повернути в роботу</button>
+            </form>
+
+            <form method="POST" action="{% url 'ticket_action' ticket.id 'resolve' %}">
+                {% csrf_token %}
+                <button type="submit">Позначити вирішеною</button>
+            </form>
+        {% endif %}
+
+    {% endif %}
+
+    {% if user.role == 'Client' and ticket.status == 'Resolved' %}
+
+        {% if ticket.can_reopen %}
+            <form method="POST" action="{% url 'ticket_action' ticket.id 'reopen' %}">
+                {% csrf_token %}
+                <button type="submit">Відкрити повторно</button>
+            </form>
+        {% endif %}
+
+        <form method="POST" action="{% url 'ticket_action' ticket.id 'close' %}">
+            {% csrf_token %}
+            <button type="submit">Закрити заявку</button>
+        </form>
+
+    {% endif %}
+
+    {% if user.role == 'Manager' and not ticket.is_closed %}
+
+        <h2>Зміна пріоритету</h2>
+
+        <form method="POST" action="{% url 'ticket_priority' ticket.id %}">
+            {% csrf_token %}
+
+            <select name="priority">
+                <option value="Low">Низький</option>
+                <option value="Medium">Середній</option>
+                <option value="High">Високий</option>
+                <option value="Critical">Критичний</option>
+            </select>
+
+            <button type="submit">Змінити пріоритет</button>
+        </form>
+
+        <h2>Призначити агента</h2>
+
+        <form method="POST" action="{% url 'ticket_assign' ticket.id %}">
+            {% csrf_token %}
+
+            <select name="agent">
+                {% for agent in agents %}
+                    <option value="{{ agent.id }}">
+                        {{ agent.username }}
+                    </option>
+                {% endfor %}
+            </select>
+
+            <button type="submit">Призначити</button>
+        </form>
+
+    {% endif %}
+
+    <h2>Коментарі</h2>
+
+    {% for comment in comments %}
+
+        <div class="profile-container">
+            <p>{{ comment.author.username }}</p>
+            <p>{{ comment.created_at }}</p>
+            <p>{{ comment.text }}</p>
+
+            {% if comment.is_internal %}
+                <p>Внутрішній коментар</p>
+            {% endif %}
+        </div>
+
+    {% empty %}
+
+        <p>Коментарів поки немає.</p>
+
+    {% endfor %}
+
+    {% if not ticket.is_closed %}
+
+        <h2>Додати коментар</h2>
+
+        <form method="POST">
+            {% csrf_token %}
+
+            {{ form.as_p }}
+
+            {% if user.role == 'Agent' or user.role == 'Manager' %}
+                <label>
+                    <input type="checkbox" name="is_internal">
+                    Внутрішній коментар
+                </label>
+            {% endif %}
+
+            <button type="submit">Надіслати</button>
+        </form>
+
+    {% endif %}
+
+    <a href="{% url 'ticket_list' %}">Назад до заявок</a>
+
+</div>
+
+</body>
+</html>

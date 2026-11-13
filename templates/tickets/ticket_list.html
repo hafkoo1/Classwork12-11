@@ -1,0 +1,89 @@
+
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>Заявки</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+
+<div class="dashboard-container">
+
+    <h1>Заявки</h1>
+
+    <nav class="dashboard-nav">
+        <a href="{% url 'dashboard' %}">Головна</a>
+        <a href="{% url 'profile' %}">Профіль</a>
+
+        {% if user.role == 'Client' %}
+            <a href="{% url 'ticket_create' %}">Створити заявку</a>
+        {% endif %}
+    </nav>
+
+    <form method="GET">
+
+        <input type="text" name="search"
+               placeholder="Пошук за заголовком">
+
+        <select name="status">
+            <option value="">Усі статуси</option>
+            {% for value, label in tickets.model.STATUS_CHOICES %}
+                <option value="{{ value }}">{{ label }}</option>
+            {% endfor %}
+        </select>
+
+        <select name="priority">
+            <option value="">Усі пріоритети</option>
+            <option value="Low">Низький</option>
+            <option value="Medium">Середній</option>
+            <option value="High">Високий</option>
+            <option value="Critical">Критичний</option>
+        </select>
+
+        <select name="category">
+            <option value="">Усі категорії</option>
+            {% for category in categories %}
+                <option value="{{ category.id }}">
+                    {{ category.name }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <select name="sort">
+            <option value="date">За датою</option>
+            <option value="priority">За пріоритетом</option>
+        </select>
+
+        <button type="submit">Фільтрувати</button>
+    </form>
+
+    {% for ticket in tickets %}
+
+        <div class="profile-container">
+
+            <h2>{{ ticket.title }}</h2>
+
+            <p>Статус: {{ ticket.get_status_display }}</p>
+            <p>Пріоритет: {{ ticket.get_priority_display }}</p>
+            <p>Категорія: {{ ticket.category }}</p>
+            <p>Автор: {{ ticket.author.username }}</p>
+
+            <a href="{% url 'ticket_detail' ticket.id %}">
+                Переглянути заявку
+            </a>
+
+        </div>
+
+    {% empty %}
+
+        <p>Заявок поки немає.</p>
+
+    {% endfor %}
+
+</div>
+
+</body>
+</html>
